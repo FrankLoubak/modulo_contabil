@@ -42,7 +42,7 @@ O sistema cobre aproximadamente **80% das tarefas rotineiras** de um escritório
 - Alíquota efetiva com memória de cálculo auditável em PDF
 - Deduções de ICMS-ST e ISS retido na fonte
 - Geração de instrução PGDAS-D passo a passo
-- XML DCTFWeb e eventos EFD-Reinf prontos para transmissão
+- Relatório de conferência da DCTFWeb (gerada automaticamente no e-CAC via eSocial/Reinf) e eventos EFD-Reinf prontos para transmissão
 - Relatório DEFIS e DASN-SIMEI (MEI)
 
 ### 👥 Departamento Pessoal
@@ -143,7 +143,7 @@ empresa-b.contaai.com.br  →  schema: tenant_empresa_b
 | S-02 | Integração fiscal — REST, webhook, CSV, polling | 🔲 Planejado |
 | S-03 | Processamento NF-e / NFC-e | 🔲 Planejado |
 | S-04 | Apuração DAS — Simples Nacional | 🔲 Planejado |
-| S-05 | Obrigações acessórias — DCTFWeb, EFD-Reinf, PGDAS | 🔲 Planejado |
+| S-05 | Obrigações acessórias — conferência DCTFWeb, EFD-Reinf, PGDAS | 🔲 Planejado |
 | S-06 | Folha de pagamento | 🔲 Planejado |
 | S-07 | Férias e 13º salário | 🔲 Planejado |
 | S-08 | Admissão e rescisão | 🔲 Planejado |
@@ -160,14 +160,14 @@ O sistema foi desenhado para operar **sem responsabilidade legal contábil** sob
 
 **O sistema faz:**
 - ✅ Calcula impostos, encargos e contribuições
-- ✅ Gera XMLs validados (eSocial, DCTFWeb, EFD-Reinf)
+- ✅ Gera XMLs validados (eSocial, EFD-Reinf) + relatório de conferência DCTFWeb
 - ✅ Emite NF-e/NFC-e usando credenciais do próprio cliente na NFE.io
 - ✅ Gera holerites, recibos, TRCT e avisos em PDF
 - ✅ Alerta sobre prazos e inconsistências fiscais
 
 **Requer ação do cliente com certificado digital:**
 - ⚡ Transmissão de eventos eSocial
-- ⚡ Envio de DCTFWeb e EFD-Reinf
+- ⚡ Transmissão da DCTFWeb no e-CAC e envio da EFD-Reinf
 - ⚡ Confirmação e pagamento do DAS no PGDAS-D
 - ⚡ Assinatura de documentos com validade jurídica
 
