@@ -16,3 +16,14 @@ export function normalizeFromNfeio(_payload: unknown): NotaFiscalEvento {
     'normalizeFromNfeio: não implementado — aguardando payload real do webhook NFE.io (Regra 8)',
   )
 }
+
+/**
+ * Distribuição (entradas): NF-e recebida pela chave → NotaFiscalEvento.
+ * STUB pelo mesmo motivo — o schema do retorno da distribuição não foi
+ * confirmado. direcao será 'entrada'.
+ */
+export function normalizeFromNfeioDistribuicao(_payload: unknown): NotaFiscalEvento {
+  throw new Error(
+    'normalizeFromNfeioDistribuicao: não implementado — aguardando payload real da distribuição (Regra 8)',
+  )
+}

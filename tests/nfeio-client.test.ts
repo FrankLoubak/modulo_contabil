@@ -58,6 +58,20 @@ describe('NfeioClient', () => {
     expect(url).toBe('https://api.nfe.io/v2/legalentities/basicInfo/46070993000179')
   })
 
+  it('consultarEntradaPorChave usa o path de distribuição (configurável)', async () => {
+    const spy = mockFetch(200, { nfe: {} })
+    const client = new NfeioClient({
+      apiKey: API_KEY,
+      consultaBaseUrl: 'https://api.nfe.io',
+      distribuicaoPath: '/v1/distribution/accessKey',
+    })
+
+    await client.consultarEntradaPorChave('9'.repeat(44))
+
+    const [url] = spy.mock.calls[0]!
+    expect(url).toBe(`https://api.nfe.io/v1/distribution/accessKey/${'9'.repeat(44)}`)
+  })
+
   it('construtor rejeita apiKey vazia', () => {
     expect(() => new NfeioClient({ apiKey: '' })).toThrow()
   })

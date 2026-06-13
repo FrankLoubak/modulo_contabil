@@ -11,6 +11,10 @@
  */
 import { env } from '../env.js'
 
+// Path da distribuição (entradas) por chave de acesso. ⚠️ NÃO confirmado: a doc
+// e o host renderizam só no console logado. Override via opção distribuicaoPath.
+const DEFAULT_DISTRIBUICAO_PATH = '/v1/distribution/accessKey'
+
 export class NfeioError extends Error {
   constructor(
     public readonly status: number,
@@ -26,6 +30,7 @@ export interface NfeioClientOptions {
   apiKey: string
   baseUrl?: string // emissão (default api.nfse.io)
   consultaBaseUrl?: string // consulta CNPJ/distribuição
+  distribuicaoPath?: string // override do path da distribuição (não confirmado)
 }
 
 // Dados básicos de uma empresa na NFE.io (subconjunto usado pelo SaaS)
@@ -42,12 +47,14 @@ export class NfeioClient {
   private readonly apiKey: string
   private readonly baseUrl: string
   private readonly consultaBaseUrl: string
+  private readonly distribuicaoPath: string
 
   constructor(opts: NfeioClientOptions) {
     if (opts.apiKey === '') throw new Error('NfeioClient: apiKey vazia')
     this.apiKey = opts.apiKey
     this.baseUrl = (opts.baseUrl ?? env.NFEIO_BASE_URL).replace(/\/$/, '')
     this.consultaBaseUrl = (opts.consultaBaseUrl ?? env.NFEIO_CONSULTA_BASE_URL).replace(/\/$/, '')
+    this.distribuicaoPath = (opts.distribuicaoPath ?? DEFAULT_DISTRIBUICAO_PATH).replace(/\/$/, '')
   }
 
   /** Cliente a partir do ambiente (NFEIO_API_KEY). Lança se não configurado. */
@@ -72,6 +79,16 @@ export class NfeioClient {
    */
   consultarCnpj(federalTaxNumber: string): Promise<unknown> {
     return this.request('GET', this.consultaBaseUrl, `/v2/legalentities/basicInfo/${federalTaxNumber}`)
+  }
+
+  /**
+   * Consulta uma NF-e recebida (entrada) pela chave de acesso, via distribuição
+   * SEFAZ. Retorna o payload bruto da NFE.io (normalização para o modelo canônico
+   * fica em normalizeFromNfeioDistribuicao, pendente do payload real).
+   * ⚠️ Host e path NÃO confirmados — validar contra o console NFE.io.
+   */
+  consultarEntradaPorChave(accessKey: string): Promise<unknown> {
+    return this.request('GET', this.consultaBaseUrl, `${this.distribuicaoPath}/${accessKey}`)
   }
 
   // Executa a requisição com o header de auth correto e trata erros (Regra 8:
