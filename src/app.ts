@@ -11,6 +11,7 @@ import Fastify, { type FastifyServerOptions } from 'fastify'
 import { sql } from 'kysely'
 import { requireAuth } from './auth/middleware.js'
 import { authRoutes } from './auth/routes.js'
+import { onboardingRoutes } from './onboarding/routes.js'
 import { releaseTenantConnection, requireTenant } from './tenant/middleware.js'
 
 export function buildApp(opts: FastifyServerOptions = {}): ReturnType<typeof Fastify> {
@@ -26,6 +27,9 @@ export function buildApp(opts: FastifyServerOptions = {}): ReturnType<typeof Fas
 
   // Rota pública — liveness
   app.get('/api/health', async () => ({ status: 'ok' }))
+
+  // Onboarding público (cria tenant + admin)
+  app.register(onboardingRoutes)
 
   // Diagnóstico de isolamento: confirma que o search_path está no schema do tenant
   app.get('/api/tenant/whoami', { preHandler: requireTenant }, async (request) => {

@@ -55,7 +55,7 @@ afterAll(async () => {
   await publicDb.destroy()
 })
 
-function loginReq(body: unknown, tenant = 'auth_t') {
+function loginReq(body: object, tenant = 'auth_t') {
   return app.inject({
     method: 'POST',
     url: '/api/tenant/auth/login',
