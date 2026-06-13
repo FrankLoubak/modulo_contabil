@@ -1,1 +1,13 @@
-# adicionar arquivos 
+# Dependências e build
+node_modules/
+dist/
+coverage/
+
+# Ambiente — nunca commitar credenciais
+.env
+.env.local
+
+# Logs e temporários
+*.log
+*.tmp
+.DS_Store
