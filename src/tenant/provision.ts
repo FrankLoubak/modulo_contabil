@@ -15,21 +15,13 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { PoolClient } from 'pg'
 import { pool } from '../db.js'
+import { schemaForSlug } from './schema.js'
+
+// Re-exporta para os consumidores que já importam de provision
+export { schemaForSlug } from './schema.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const TENANT_MIGRATIONS_DIR = join(__dirname, '..', '..', 'migrations', 'tenant')
-
-// Slug seguro para uso como identificador de schema (defesa contra injeção:
-// o nome do schema é interpolado, então NÃO pode aceitar nada fora deste set).
-const SLUG_RE = /^[a-z0-9_]+$/
-
-/** Retorna o nome do schema para um slug, validando o formato. */
-export function schemaForSlug(slug: string): string {
-  if (!SLUG_RE.test(slug)) {
-    throw new Error(`slug de tenant inválido: ${JSON.stringify(slug)}`)
-  }
-  return `tenant_${slug}`
-}
 
 /**
  * Cria o schema do tenant (se ainda não existir) e aplica as migrations do

@@ -14,9 +14,9 @@
 import { Kysely, PostgresDialect } from 'kysely'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import type { PoolClient } from 'pg'
-import { pool, publicDb } from '../db.js'
+import { pinnedPool, pool, publicDb } from '../db.js'
 import type { Database } from '../types.js'
-import { schemaForSlug } from './provision.js'
+import { schemaForSlug } from './schema.js'
 
 export interface TenantContext {
   id: string
@@ -50,22 +50,6 @@ export function resolveTenantSlug(request: FastifyRequest): string | null {
     if (sub !== '' && !NON_TENANT_HOSTS.has(sub)) return sub.toLowerCase()
   }
   return null
-}
-
-// Envolve um PoolClient já reservado para que o Kysely o use sem devolvê-lo ao
-// pool a cada query: o release real acontece no cleanup da requisição.
-function pinnedPool(client: PoolClient) {
-  const proxy = new Proxy(client, {
-    get(target, prop, receiver) {
-      if (prop === 'release') return () => {} // no-op — release controlado fora do Kysely
-      const value = Reflect.get(target, prop, receiver)
-      return typeof value === 'function' ? value.bind(target) : value
-    },
-  })
-  return {
-    connect: async () => proxy,
-    end: async () => {},
-  }
 }
 
 /**

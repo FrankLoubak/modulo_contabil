@@ -9,6 +9,8 @@
  */
 import Fastify, { type FastifyServerOptions } from 'fastify'
 import { sql } from 'kysely'
+import { requireAuth } from './auth/middleware.js'
+import { authRoutes } from './auth/routes.js'
 import { releaseTenantConnection, requireTenant } from './tenant/middleware.js'
 
 export function buildApp(opts: FastifyServerOptions = {}): ReturnType<typeof Fastify> {
@@ -29,6 +31,14 @@ export function buildApp(opts: FastifyServerOptions = {}): ReturnType<typeof Fas
   app.get('/api/tenant/whoami', { preHandler: requireTenant }, async (request) => {
     const result = await sql<{ schema: string }>`SELECT current_schema() AS schema`.execute(request.db!)
     return { tenant: request.tenant!.slug, schema: result.rows[0]?.schema }
+  })
+
+  // Rotas de autenticação (login/refresh/logout)
+  app.register(authRoutes)
+
+  // Dados do usuário autenticado atual
+  app.get('/api/tenant/me', { preHandler: [requireTenant, requireAuth] }, async (request) => {
+    return { id: request.user!.id, role: request.user!.role, tenant: request.tenant!.slug }
   })
 
   return app
