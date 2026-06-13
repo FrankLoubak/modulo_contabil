@@ -5,14 +5,10 @@
  * do estado mutável (status, totais, URLs), nunca duplica. Itens são
  * re-sincronizados (delete + insert) dentro da mesma transação.
  */
-import { type Kysely, sql } from 'kysely'
+import type { Kysely } from 'kysely'
 import type { NotaFiscalEvento } from './canonical.js'
 import type { Database } from '../types.js'
-
-// Serializa um objeto para uma coluna JSONB (node-pg não faz isso sozinho).
-function toJsonb(value: unknown) {
-  return sql`${JSON.stringify(value)}::jsonb`
-}
+import { toJsonb } from './jsonb.js'
 
 export interface PersistResult {
   id: string

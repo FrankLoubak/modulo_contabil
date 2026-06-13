@@ -11,6 +11,7 @@ import Fastify, { type FastifyServerOptions } from 'fastify'
 import { sql } from 'kysely'
 import { requireAuth } from './auth/middleware.js'
 import { authRoutes } from './auth/routes.js'
+import { integracaoRoutes } from './integracao/routes.js'
 import { onboardingRoutes } from './onboarding/routes.js'
 import { releaseTenantConnection, requireTenant } from './tenant/middleware.js'
 
@@ -39,6 +40,9 @@ export function buildApp(opts: FastifyServerOptions = {}): ReturnType<typeof Fas
 
   // Rotas de autenticação (login/refresh/logout)
   app.register(authRoutes)
+
+  // Rotas de integração (REST push de notas)
+  app.register(integracaoRoutes)
 
   // Dados do usuário autenticado atual
   app.get('/api/tenant/me', { preHandler: [requireTenant, requireAuth] }, async (request) => {
