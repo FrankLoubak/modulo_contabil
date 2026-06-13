@@ -71,8 +71,8 @@ export interface SociosTable {
   id: Generated<string>
   cpf: string
   nome: string
-  percentual: Generated<Numeric>
-  pro_labore: Generated<Numeric>
+  percentual: Numeric
+  pro_labore: Numeric
   created_at: Generated<Timestamp>
 }
 
@@ -147,9 +147,9 @@ export interface NotasFiscaisItensTable {
   descricao: string
   ncm: string | null
   cfop: string | null
-  quantidade: Generated<Numeric>
-  valor_unitario: Generated<Numeric>
-  valor_total: Generated<Numeric>
+  quantidade: Numeric
+  valor_unitario: Numeric
+  valor_total: Numeric
   impostos: unknown | null // JSONB
   created_at: Generated<Timestamp>
 }
