@@ -22,6 +22,15 @@ const schema = z.object({
   JWT_SECRET: z.string().min(16, 'JWT_SECRET deve ter ao menos 16 caracteres'),
   PORT: z.coerce.number().int().positive().default(3333),
   HOST: z.string().default('0.0.0.0'),
+
+  // NFE.io (A2) — opcionais: a app sobe sem integração; o cliente exige a chave
+  // só quando usado. 1 API key por conta (global); companyId é por tenant (banco).
+  NFEIO_ENVIRONMENT: z.enum(['production', 'sandbox']).default('sandbox'),
+  NFEIO_API_KEY: z.string().optional(),
+  NFEIO_COMPANY_ID: z.string().optional(),
+  // Host de emissão NF-e (confirmado) e host das APIs de consulta (a confirmar)
+  NFEIO_BASE_URL: z.string().url().default('https://api.nfse.io'),
+  NFEIO_CONSULTA_BASE_URL: z.string().url().default('https://api.nfe.io'),
 })
 
 const parsed = schema.safeParse(process.env)
