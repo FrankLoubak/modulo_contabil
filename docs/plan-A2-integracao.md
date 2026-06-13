@@ -118,23 +118,67 @@ src/nfeio/
 - [ ] Rate limit do polling respeitado
 - [ ] Erro de parse/payload inválido vira registro em `nfe_eventos_raw` (não 500 cego)
 
-## ⚠️ O que preciso da documentação da NFE.io antes de codar (Regra 8)
+## Achados da documentação NFE.io (lidos em 2026-06-13)
 
-1. **Webhook:** formato exato do payload de notificação; como a **assinatura HMAC**
-   é calculada (algoritmo, sobre qual corpo, qual segredo) e onde configurar o
-   segredo por empresa.
-2. **Identificação do tenant no webhook:** a NFE.io permite uma URL por
-   empresa/conta? Manda CNPJ do emitente no payload? (define a estratégia de
-   resolução de tenant).
-3. **Consulta/Polling:** endpoint de listagem de notas (entrada e saída), paginação,
-   **limites de rate** e autenticação.
-4. **Consulta de NF recebida pela chave** (entradas/fornecedores): endpoint e XML
-   retornado.
-5. **Consulta de CNPJ (Companies)** — pendência herdada do A1 (validação Receita
-   Federal no onboarding): endpoint, campos retornados, custo/limite.
-6. **Modelo de credencial:** uma API key por conta do SaaS ou uma por empresa?
-   (impacta onde guardar — `process.env` global vs. config por tenant).
+> Fonte: `https://nfe.io/docs/desenvolvedores/rest-api/` (a `/integracoes/` é só
+> catálogo de plugins). A API é dividida em **produtos separados**, cada um com sua
+> própria árvore — importante para o A2.
 
-> Assim que você trouxer o link, eu leio os endpoints relevantes **antes** de
-> escrever o cliente, e travamos as 3 decisões em aberto (itens normalizados vs
-> JSONB, resolução de tenant no webhook, escopo da credencial) numa eng-review.
+### Produtos relevantes
+| Produto | Caminho | Uso no A2 |
+|---------|---------|-----------|
+| NF-e produto v2 | `.../nota-fiscal-de-produto-v2/` | emissão (saídas) + webhooks |
+| Consulta NF-e distribuição | `.../consulta-nf-e-distribuicao/` | **entradas** (NF-e recebidas) |
+| Consulta de CNPJ v1 | `.../consulta-de-cnpj-v1/` | **validação CNPJ no onboarding** (pendência A1) |
+| Consulta de CPF v1 | `.../consulta-de-cpf-v1/` | validação de sócios (futuro) |
+
+### Webhooks (NF-e produto v2)
+- CRUD por conta: `POST /v2/webhooks` (registra URL + eventos), `GET` listar,
+  `PUT` alterar, `DELETE` excluir/excluir-todos, e um endpoint de **teste**.
+- A URL registrada **deve responder 200 OK** a um POST de teste.
+- ⚠️ **Assinatura HMAC NÃO confirmada na doc acessível.** O CLAUDE.md §6 afirma
+  `x-nfeio-signature` (lições de projetos anteriores), mas as páginas que consegui
+  ler não documentam segredo/assinatura. **Não construir a validação HMAC sobre
+  suposição** — verificar com uma entrega real (criar webhook de teste e capturar
+  os headers) antes de implementar (§1 Precisão).
+
+### Distribuição / entradas
+- `consulta-nf-e-distribuicao`: consulta por `access_key`, por distribuição e por
+  `event_key`; retorna **XML/JSON/PDF/manifest**; tem um `processwebhook` para
+  notas recém-recebidas. É o canal de **entradas/fornecedores**.
+
+### Consulta de CNPJ
+- `consulta-de-cnpj-v1` (recurso "LegalEntities", endpoint v2). Autenticação por
+  **API key** ("preencha sua API key no topo"). Resolve a validação Receita Federal
+  do onboarding (A1). Campos exatos e rate limit não renderizaram no fetch estático.
+
+## Respostas às 6 perguntas
+
+| # | Pergunta | Status |
+|---|----------|--------|
+| 1 | Webhook + HMAC | ⚠️ **Parcial** — CRUD/registro confirmados; **assinatura a verificar empiricamente** |
+| 2 | Tenant no webhook | ✅ **Resolvido** — webhooks têm URL de destino arbitrária por conta → registrar **URL por tenant** (`/api/public/webhooks/nfeio/:token`) |
+| 3 | Polling/consulta | 🔸 endpoints de listagem existem (Product Invoices); **rate limit a confirmar** |
+| 4 | NF recebida pela chave | ✅ **Resolvido** — `consulta-nf-e-distribuicao` (por `access_key`, XML completo) |
+| 5 | Consulta de CNPJ | ✅ **Resolvido** — `consulta-de-cnpj-v1` (produto separado da Companies de emissão) |
+| 6 | Modelo de credencial | ✅ **Resolvido** — **1 API key por conta** (`NFEIO_API_KEY` global) → N **Companies** (`companyId` por tenant) |
+
+### Impacto no design (atualiza o plano)
+- **Credencial:** `NFEIO_API_KEY` global no env **+** guardar o **`companyId` da NFE.io
+  por tenant** (nova tabela `integracao_nfeio` no schema do tenant, ou campo em
+  `configuracoes_tributarias`).
+- **Entradas:** modelar `consulta-nf-e-distribuicao` como canal próprio (não confundir
+  com a emissão produto-v2).
+- **Webhook HMAC:** manter o passo de validação no design, mas **gated** numa
+  verificação real do header antes de codar a checagem.
+
+## Ainda em aberto (verificar antes/durante a implementação)
+1. **Assinatura do webhook** — header e algoritmo reais (capturar entrega de teste).
+2. **Rate limits** — de consulta/polling e de consulta de CNPJ (página de billing).
+3. **Header de auth exato** — CLAUDE.md diz `Authorization: <token>` sem `Bearer`;
+   confirmar contra a doc viva no primeiro request (Regra 8, parar no 1º 401).
+
+## Decisões para a eng-review
+1. Itens da NF: tabela normalizada `notas_fiscais_itens` (recomendado p/ DAS A4) vs `JSONB`.
+2. Onde guardar `companyId` da NFE.io por tenant.
+3. Estratégia final de token na URL do webhook (rota por tenant).
