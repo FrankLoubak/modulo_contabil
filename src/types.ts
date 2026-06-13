@@ -35,6 +35,14 @@ export interface PlanosTable {
   created_at: Generated<Timestamp>
 }
 
+export interface NfeioWebhookRoutesTable {
+  webhook_token: string
+  tenant_slug: string
+  company_id: string
+  ambiente: Generated<string>
+  created_at: Generated<Timestamp>
+}
+
 export interface AuditLogTable {
   id: Generated<number>
   tenant_id: string | null
@@ -181,6 +189,7 @@ export interface Database {
   tenants: TenantsTable
   planos: PlanosTable
   audit_log: AuditLogTable
+  nfeio_webhook_routes: NfeioWebhookRoutesTable
   // tenant — fundação (A1)
   empresa: EmpresaTable
   socios: SociosTable

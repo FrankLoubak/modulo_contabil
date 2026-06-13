@@ -18,6 +18,34 @@ export interface IngestResult {
   status: string
 }
 
+/**
+ * Registra o payload bruto de um webhook NFE.io sem processá-lo ainda.
+ * A normalização (normalizeFromNfeio) só roda quando o payload real for
+ * confirmado (§6); até lá guardamos com status 'recebido' para replay.
+ * Retorna o id do evento bruto.
+ */
+export async function recordRawWebhook(
+  db: Kysely<Database>,
+  payload: unknown,
+  assinatura?: string,
+): Promise<number> {
+  const row = await db
+    .insertInto('nfe_eventos_raw')
+    .values({
+      origem: 'nfeio',
+      chave_acesso: null,
+      payload: toJsonb(payload),
+      assinatura: assinatura ?? null,
+      status_processamento: 'recebido',
+      erro: null,
+      nota_id: null,
+      processed_at: null,
+    })
+    .returning('id')
+    .executeTakeFirstOrThrow()
+  return row.id
+}
+
 export async function ingestEvento(
   db: Kysely<Database>,
   origem: OrigemEvento,

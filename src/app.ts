@@ -12,6 +12,7 @@ import { sql } from 'kysely'
 import { requireAuth } from './auth/middleware.js'
 import { authRoutes } from './auth/routes.js'
 import { integracaoRoutes } from './integracao/routes.js'
+import { webhookRoutes } from './integracao/webhook-routes.js'
 import { onboardingRoutes } from './onboarding/routes.js'
 import { releaseTenantConnection, requireTenant } from './tenant/middleware.js'
 
@@ -31,6 +32,9 @@ export function buildApp(opts: FastifyServerOptions = {}): ReturnType<typeof Fas
 
   // Onboarding público (cria tenant + admin)
   app.register(onboardingRoutes)
+
+  // Webhook público da NFE.io (resolve tenant pelo token na URL)
+  app.register(webhookRoutes)
 
   // Diagnóstico de isolamento: confirma que o search_path está no schema do tenant
   app.get('/api/tenant/whoami', { preHandler: requireTenant }, async (request) => {
