@@ -54,21 +54,24 @@ export async function onboardTenant(input: OnboardingInput): Promise<OnboardingR
   // 2. Provisiona o schema isolado do tenant
   await provisionTenant(slug)
 
-  // 3. Empresa + admin + auto-login, tudo no schema do tenant
-  const auth = await withTenantDb(slug, async (db) => {
-    await db
-      .insertInto('empresa')
-      .values({
-        cnpj,
-        razao_social: razaoSocial,
-        ...(nomeFantasia !== undefined ? { nome_fantasia: nomeFantasia } : {}),
-      })
-      .execute()
+  // 3. Empresa + admin + auto-login, tudo no schema do tenant e em UMA transação
+  //    (AR A1 — achado 3.2): se qualquer passo falhar, nada fica gravado.
+  const auth = await withTenantDb(slug, (db) =>
+    db.transaction().execute(async (trx) => {
+      await trx
+        .insertInto('empresa')
+        .values({
+          cnpj,
+          razao_social: razaoSocial,
+          ...(nomeFantasia !== undefined ? { nome_fantasia: nomeFantasia } : {}),
+        })
+        .execute()
 
-    // Primeiro usuário do tenant é admin
-    await createUser(db, { email: admin.email, password: admin.password, role: 'admin' })
-    return login(db, slug, admin.email, admin.password, ip)
-  })
+      // Primeiro usuário do tenant é admin
+      await createUser(trx, { email: admin.email, password: admin.password, role: 'admin' })
+      return login(trx, slug, admin.email, admin.password, ip)
+    }),
+  )
 
   // 4. Registra o tenant (último passo: a partir daqui ele resolve no middleware)
   await publicDb

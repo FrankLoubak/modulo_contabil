@@ -60,6 +60,14 @@ describe('POST /api/public/onboarding', () => {
     expect(body.user).toMatchObject({ email: ADMIN.email, role: 'admin' })
   })
 
+  it('cria o índice de busca por refresh token no schema do tenant (AR 3.1)', async () => {
+    const { rows } = await pool.query(
+      `SELECT 1 FROM pg_indexes WHERE schemaname = $1 AND indexname = 'idx_sessions_refresh_hash'`,
+      [schemaForSlug(SLUG)],
+    )
+    expect(rows.length).toBe(1)
+  })
+
   it('o tenant criado já responde no login', async () => {
     const res = await app.inject({
       method: 'POST',

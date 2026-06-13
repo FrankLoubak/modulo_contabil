@@ -76,9 +76,21 @@ sobre os quais os demais sprints (A2–A10) se apoiam.
   endpoint role-gated no A1 além do conceito. Plugar nas rotas de cadastro/admin.
 - **Seeding de legislação:** tabelas `tabelas_*` e `aliquotas_rt` estão vazias —
   populadas em A4/A5 conforme o runbook (`docs/RUNBOOK_LEGISLACAO.md`).
-- **Janela de órfão no onboarding:** se a inserção final em `public.tenants` falhar
-  após criar o schema, este fica órfão (invisível ao app). Mitigado por pré-checagem
-  de unicidade; revisar se necessário transação distribuída.
+- **Janela de órfão no onboarding:** as escritas no schema do tenant (empresa +
+  admin) agora rodam em transação (AR 3.2). Ainda assim, se a inserção final em
+  `public.tenants` falhar, o schema fica órfão (invisível ao app). Mitigado por
+  pré-checagem de unicidade; revisar se necessário transação distribuída.
+
+## Revisão AR — achados resolvidos
+
+| # | Achado | Fix |
+|---|--------|-----|
+| 2.1 | Leak de conexão se `SET search_path` falhar | `pgClient` anexado antes do SET (`middleware.ts`) |
+| 3.1 | Sem índice em `sessions.refresh_token_hash` | `migrations/tenant/0002_*` + teste |
+| 3.2 | Escritas do onboarding sem transação | `db.transaction()` no `onboardTenant` |
+
+Nota 4.1 (audit_log ainda não populado) segue como dívida documentada — sem ação
+sensível no A1 que exija trilha.
 
 ## Como rodar
 

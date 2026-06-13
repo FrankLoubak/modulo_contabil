@@ -82,10 +82,12 @@ export async function requireTenant(request: FastifyRequest, reply: FastifyReply
     return reply.code(403).send({ error: `tenant ${tenant.status}` })
   }
 
-  // Reserva a conexão e fixa o schema do tenant antes de qualquer query do handler
+  // Reserva a conexão e fixa o schema do tenant antes de qualquer query do handler.
+  // pgClient é anexado ANTES do SET para que o cleanup (onError) libere a conexão
+  // mesmo se o SET falhar (ex.: schema removido) — evita leak no caminho de erro.
   const client = await pool.connect()
-  await client.query(`SET search_path = ${schema}`)
   request.pgClient = client
+  await client.query(`SET search_path = ${schema}`)
   request.tenant = { id: tenant.id, slug, schema }
   request.db = new Kysely<Database>({ dialect: new PostgresDialect({ pool: pinnedPool(client) }) })
 }
