@@ -114,16 +114,83 @@ export interface ConfiguracoesTributariasTable {
   updated_at: Generated<Timestamp>
 }
 
+// ---------------------------------------------------------------------------
+// Schema por tenant — integração (Sprint A2)
+// ---------------------------------------------------------------------------
+export interface NotasFiscaisTable {
+  id: Generated<string>
+  chave_acesso: string
+  tipo: string // NFe | NFCe
+  direcao: string // saida | entrada
+  origem: string // api|webhook|nfeio|csv|polling|mcp
+  numero: string | null
+  serie: string | null
+  data_emissao: Timestamp | null
+  emitente_cnpj: string | null
+  emitente_razao: string | null
+  destinatario_cnpj: string | null
+  destinatario_cpf: string | null
+  destinatario_razao: string | null
+  status: Generated<string>
+  valor_total: Numeric | null
+  totais: unknown | null // JSONB TotaisNF
+  xml_url: string | null
+  danfe_url: string | null
+  nfeio_id: string | null
+  created_at: Generated<Timestamp>
+  updated_at: Generated<Timestamp>
+}
+
+export interface NotasFiscaisItensTable {
+  id: Generated<string>
+  nota_id: string
+  descricao: string
+  ncm: string | null
+  cfop: string | null
+  quantidade: Generated<Numeric>
+  valor_unitario: Generated<Numeric>
+  valor_total: Generated<Numeric>
+  impostos: unknown | null // JSONB
+  created_at: Generated<Timestamp>
+}
+
+export interface NfeEventosRawTable {
+  id: Generated<number>
+  origem: string
+  chave_acesso: string | null
+  payload: unknown // JSONB
+  assinatura: string | null
+  status_processamento: Generated<string>
+  erro: string | null
+  nota_id: string | null
+  created_at: Generated<Timestamp>
+  processed_at: Timestamp | null
+}
+
+export interface IntegracaoNfeioTable {
+  id: Generated<string>
+  company_id: string
+  webhook_token: string
+  ambiente: Generated<string>
+  created_at: Generated<Timestamp>
+  updated_at: Generated<Timestamp>
+}
+
 export interface Database {
   // público
   tenants: TenantsTable
   planos: PlanosTable
   audit_log: AuditLogTable
-  // tenant
+  // tenant — fundação (A1)
   empresa: EmpresaTable
   socios: SociosTable
   certificado_referencia: CertificadoReferenciaTable
   users: UsersTable
   sessions: SessionsTable
   configuracoes_tributarias: ConfiguracoesTributariasTable
+  // tenant — integração (A2)
+  notas_fiscais: NotasFiscaisTable
+  notas_fiscais_itens: NotasFiscaisItensTable
+  nfe_eventos_raw: NfeEventosRawTable
+  integracao_nfeio: IntegracaoNfeioTable
 }
